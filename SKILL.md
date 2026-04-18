@@ -28,7 +28,7 @@ Aktualna wersja: `0.5.3`
 | **Claude Code** | `acpx claude` | ✅ Działa | Natywne wsparcie |
 | **Kimi (Rook)** | `acpx kimi` | ✅ Działa | Natywne wsparcie |
 | **OpenClaw** | `acpx openclaw` | ✅ Działa | Natywne wsparcie |
-| **Hermes** | `acpx hermes` | ⚠️ Częściowo | TUI na stdout zaciera JSON-RPC. Użyj MCP lub plików. |
+| **Hermes** | `acpx hermes` | ✅ Działa | Wymaga `~/.acpx/config.json` z override `hermes` → `hermes acp` |
 
 ---
 
@@ -50,33 +50,35 @@ npx acpx openclaw exec "wiadomość do OpenClaw"
 npx acpx openclaw "wiadomość (persistent session)"
 ```
 
-### Hermes — workaroundi
+### Hermes
 
-**Opcja A: Hermes MCP (preferowana dla tool-calling)**
+**Krok 0 — konfiguracja (raz)**
 ```bash
-# Terminal 1: wystaw Hermesa jako MCP server
-hermes mcp serve
-
-# Terminal 2: inny agent łączy się przez MCP client
-# (Claude Code, OpenClaw, Kimi — wszyscy mają MCP client)
-```
-
-**Opcja B: Pliki współdzielone (fallback)**
-```bash
-# Zapisz do AGENT-HANDOFF.md
-cat >> /Volumes/2TB_APFS/openclaw-data/workspace/obsidian-memory/bridge/AGENT-HANDOFF.md << 'EOF'
-## Handoff [$(date +%Y-%m-%d %H:%M)] — [Agent nadawcy]
-- **Do**: hermes
-- **Treść**: wiadomość...
+mkdir -p ~/.acpx
+cat > ~/.acpx/config.json << 'EOF'
+{
+  "agents": {
+    "hermes": {
+      "command": "hermes acp"
+    }
+  }
+}
 EOF
 ```
 
-**Opcja C: ACP via wrapper (eksperymentalna)**
+**Krok 1 — utwórz sesję**
 ```bash
-# Użyj wrappera który filtruje logi TUI
-# Zobacz: ~/.local/bin/hermes-acp-wrapper
-npx acpx --agent "hermes-acp-wrapper" exec "wiadomość"
-# ⚠️ Niestabilne — hermes-acp wymaga patcha upstream (logi na stdout zamiast stderr)
+npx acpx hermes sessions new --name hermes-main
+```
+
+**Krok 2 — wyślij wiadomość**
+```bash
+npx acpx hermes prompt "Treść wiadomości" --session hermes-main
+```
+
+**One-shot bez sesji**
+```bash
+npx acpx hermes exec "Treść wiadomości"
 ```
 
 ---
@@ -85,7 +87,7 @@ npx acpx --agent "hermes-acp-wrapper" exec "wiadomość"
 
 1. **Shell nie działa** w `acpx exec` — `spawn ... ENOENT`. Nie używaj Shell/bash do zapisu plików.
 2. **WriteFile ograniczony do cwd** — acpx domyślnie ustawia `cwd=/Users/nerucb1`. Rozwiązanie: `--cwd /Volumes/2TB_APFS/.openclaw`.
-3. **Hermes ACP TUI bug** — `hermes acp` wypisuje banner + tools + skills na stdout, co psuje JSON-RPC. Fix wymaga patcha Hermesa (issue: logi INFO → stderr, TUI → /dev/null w trybie acp).
+3. **Hermes ACP config** — `acpx` nie zna natywnie komendy `hermes acp`. Wymaga override w `~/.acpx/config.json` (patrz sekcja Hermes powyżej).
 
 ---
 
