@@ -137,3 +137,7 @@ Format wpisu:
 - **2026-04-17**: Pierwszy test ACP między Claude i Kimi — sukces.
 - **2026-04-17**: OpenClaw podłączony przez ACP — sukces.
 - **2026-04-17**: Hermes — TUI bug zidentyfikowany. Workaround: MCP lub pliki.
+
+---
+
+If this saved you time: [support me](https://www.paypal.me/nerudek)
